@@ -1,1 +1,243 @@
-<h1>CTF write-ups</h1><p>Coming soon.</p>'
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTF Write-ups · Geoffrey Sakora</title>
+<meta name="description" content="Capture-the-flag write-ups by Geoffrey Sakora: web, crypto, forensics, reversing and Linux privilege escalation. Launching soon.">
+<meta property="og:title" content="CTF Write-ups · Geoffrey Sakora">
+<meta property="og:description" content="Step-by-step CTF walkthroughs: how I think, enumerate, exploit and capture the flag. Launching soon.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://ctf.geoffreysakora.cv">
+<meta name="theme-color" content="#05090a">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%2305090a'/><text x='50' y='66' font-size='52' text-anchor='middle' fill='%2300ff9c' font-family='monospace' font-weight='bold'>&gt;_</text></svg>">
+<style>
+  :root{
+    --bg:#05090a; --panel:#0a1214; --line:#12302a; --green:#00ff9c; --dim:#4f8f7a;
+    --text:#cfe9e0; --amber:#ffb454; --red:#ff5f6d; --cyan:#4fd1ff;
+    --mono: ui-monospace, "JetBrains Mono", "Fira Code", "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--text); font-family:var(--mono);
+    line-height:1.55; overflow-x:hidden; -webkit-font-smoothing:antialiased;
+  }
+  #rain{position:fixed;inset:0;z-index:0;opacity:.22}
+  body::before{ /* scanlines */
+    content:"";position:fixed;inset:0;z-index:3;pointer-events:none;
+    background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px);
+  }
+  body::after{ /* vignette */
+    content:"";position:fixed;inset:0;z-index:2;pointer-events:none;
+    background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.75) 100%);
+  }
+  main{position:relative;z-index:4;max-width:980px;margin:0 auto;padding:clamp(20px,5vw,56px) 20px 40px}
+
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+    font-size:.82rem;color:var(--dim);margin-bottom:clamp(28px,6vw,60px)}
+  .topbar a{color:var(--dim);text-decoration:none;border-bottom:1px dashed var(--line);transition:.2s}
+  .topbar a:hover{color:var(--green);border-color:var(--green)}
+  .status{display:inline-flex;align-items:center;gap:8px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px var(--amber);animation:pulse 1.6s infinite}
+  @keyframes pulse{50%{opacity:.3}}
+
+  h1{
+    font-size:clamp(2.2rem,8vw,4.6rem);line-height:1.02;letter-spacing:-.02em;color:#fff;
+    position:relative;display:inline-block;font-weight:800;
+  }
+  h1 .acc{color:var(--green);text-shadow:0 0 24px rgba(0,255,156,.45)}
+  h1.glitch::before,h1.glitch::after{
+    content:attr(data-text);position:absolute;left:0;top:0;width:100%;overflow:hidden;
+  }
+  h1.glitch::before{color:var(--cyan);animation:g1 4s infinite steps(1);clip-path:inset(0 0 60% 0)}
+  h1.glitch::after{color:var(--red);animation:g2 4s infinite steps(1);clip-path:inset(60% 0 0 0)}
+  @keyframes g1{0%,92%,100%{transform:none;opacity:0}93%{transform:translate(-3px,1px);opacity:.8}96%{transform:translate(2px,-1px);opacity:.8}}
+  @keyframes g2{0%,90%,100%{transform:none;opacity:0}91%{transform:translate(3px,-1px);opacity:.8}95%{transform:translate(-2px,1px);opacity:.8}}
+
+  .tag{margin-top:18px;font-size:clamp(1rem,2.4vw,1.2rem);color:var(--text);max-width:640px}
+  .tag b{color:var(--green);font-weight:600}
+
+  .grid{display:grid;grid-template-columns:1.25fr 1fr;gap:22px;margin-top:38px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}}
+  .panel{background:linear-gradient(180deg,rgba(10,18,20,.92),rgba(7,12,13,.92));
+    border:1px solid var(--line);border-radius:12px;overflow:hidden;
+    box-shadow:0 0 0 1px rgba(0,255,156,.04),0 20px 50px rgba(0,0,0,.5)}
+  .bar{display:flex;align-items:center;gap:7px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:.75rem;color:var(--dim)}
+  .bar i{width:11px;height:11px;border-radius:50%;display:inline-block}
+  .bar i:nth-child(1){background:#ff5f56}.bar i:nth-child(2){background:#ffbd2e}.bar i:nth-child(3){background:#27c93f}
+  .bar span{margin-left:8px}
+  #term{padding:16px 18px;font-size:.86rem;min-height:330px;white-space:pre-wrap;word-break:break-word}
+  .p{color:var(--green)} .c{color:var(--cyan)} .a{color:var(--amber)} .d{color:var(--dim)} .r{color:var(--red)}
+  .cursor{display:inline-block;width:.6em;height:1.05em;background:var(--green);vertical-align:text-bottom;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  .side{display:flex;flex-direction:column;gap:22px}
+  .box{padding:16px 18px}
+  .box h2{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:12px;font-weight:600}
+  .cats{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-size:.78rem;padding:5px 10px;border:1px solid var(--line);border-radius:999px;color:var(--text);
+    background:rgba(0,255,156,.04);transition:.2s;cursor:default}
+  .chip:hover{border-color:var(--green);color:var(--green);box-shadow:0 0 14px rgba(0,255,156,.2);transform:translateY(-1px)}
+
+  .queue{list-style:none}
+  .queue li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:.82rem}
+  .queue li:last-child{border:0}
+  .lock{color:var(--amber);white-space:nowrap}
+  .redact{background:var(--line);color:transparent;border-radius:3px;user-select:none;transition:.25s}
+  .queue li:hover .redact{background:rgba(0,255,156,.12);color:var(--green)}
+
+  .progress{margin-top:6px}
+  .meter{height:8px;background:#0c1a1c;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .meter div{height:100%;width:0;background:repeating-linear-gradient(45deg,var(--green) 0 8px,#00c97a 8px 16px);
+    box-shadow:0 0 14px rgba(0,255,156,.5);animation:load 2.4s .6s ease-out forwards, slide 1s linear infinite}
+  @keyframes load{to{width:62%}}
+  @keyframes slide{to{background-position:16px 0}}
+  .meter-l{display:flex;justify-content:space-between;font-size:.75rem;color:var(--dim);margin-top:8px}
+
+  .why{margin-top:28px;padding:18px 20px;border-left:3px solid var(--green);background:rgba(0,255,156,.04);
+    border-radius:0 10px 10px 0;font-size:.92rem;max-width:820px}
+  .why b{color:var(--green)}
+
+  .cta{margin-top:30px;display:flex;flex-wrap:wrap;gap:12px}
+  .btn{font-family:var(--mono);font-size:.9rem;text-decoration:none;padding:12px 20px;border-radius:8px;
+    border:1px solid var(--green);color:var(--green);transition:.2s;display:inline-flex;gap:8px;align-items:center}
+  .btn:hover{background:var(--green);color:#03120c;box-shadow:0 0 28px rgba(0,255,156,.45)}
+  .btn.ghost{border-color:var(--line);color:var(--text)}
+  .btn.ghost:hover{background:transparent;border-color:var(--green);color:var(--green)}
+
+  footer{margin-top:44px;font-size:.76rem;color:var(--dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  footer code{color:var(--green)}
+  #flag{cursor:pointer;transition:.2s}
+  #flag:hover{color:var(--amber)}
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+    #rain{display:none}
+  }
+</style>
+</head>
+<body>
+<canvas id="rain" aria-hidden="true"></canvas>
+
+<main>
+  <div class="topbar">
+    <a href="https://geoffreysakora.cv">← geoffreysakora.cv</a>
+    <span class="status"><span class="dot"></span> status: write-ups in progress</span>
+  </div>
+
+  <h1 class="glitch" data-text="CTF Write-ups"><span class="acc">CTF</span> Write-ups</h1>
+  <p class="tag">Where I break things <b>legally</b>, then document exactly how. Step-by-step walkthroughs of the enumeration, the dead ends, the exploit and the flag.</p>
+
+  <div class="grid">
+    <section class="panel" aria-label="Terminal preview">
+      <div class="bar"><i></i><i></i><i></i><span>geoffrey@ctf:~</span></div>
+      <div id="term" aria-live="off"></div>
+    </section>
+
+    <aside class="side">
+      <div class="panel box">
+        <h2>Categories</h2>
+        <div class="cats">
+          <span class="chip">web</span><span class="chip">linux privesc</span><span class="chip">crypto</span>
+          <span class="chip">forensics</span><span class="chip">reverse eng.</span><span class="chip">OSINT</span>
+          <span class="chip">networking</span><span class="chip">misc</span>
+        </div>
+      </div>
+
+      <div class="panel box">
+        <h2>Incoming (hover to decrypt)</h2>
+        <ul class="queue">
+          <li><span class="redact">SQLi → admin takeover</span><span class="lock">🔒 web</span></li>
+          <li><span class="redact">SUID to root shell</span><span class="lock">🔒 privesc</span></li>
+          <li><span class="redact">Broken RSA, small e</span><span class="lock">🔒 crypto</span></li>
+          <li><span class="redact">PCAP: find the exfil</span><span class="lock">🔒 forensics</span></li>
+        </ul>
+      </div>
+
+      <div class="panel box progress">
+        <h2>Build progress</h2>
+        <div class="meter"><div></div></div>
+        <div class="meter-l"><span>drafting &amp; redacting spoilers</span><span>62%</span></div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="why">
+    <b>Why this exists:</b> CTFs are where I practice offensive and defensive security hands-on. Each write-up shows my process (methodology, tooling and reasoning), not just the final flag. It's the proof-of-work behind the skills listed on my main portfolio.
+  </div>
+
+  <div class="cta">
+    <a class="btn" href="https://geoffreysakora.cv">▶ Back to main portfolio</a>
+    <a class="btn ghost" href="https://geoffreysakora.cv/#contact">✉ Get notified / contact me</a>
+  </div>
+
+  <footer>
+    <span>© <span id="yr"></span> Geoffrey Sakora · <code>ctf.geoffreysakora.cv</code></span>
+    <span id="flag" title="click me">flag{coming_soon_stay_curious}</span>
+  </footer>
+</main>
+
+<script>
+/* ---------- Typed terminal ---------- */
+const term = document.getElementById('term');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const script = [
+  {t:'cmd', s:'whoami'},
+  {t:'out', s:'<span class="c">geoffrey sakora</span> — DevOps · Cloud · Security'},
+  {t:'cmd', s:'cat mission.txt'},
+  {t:'out', s:'Document every CTF so you can learn from my wins <span class="d">(and my rabbit holes)</span>.'},
+  {t:'cmd', s:'ls -la writeups/'},
+  {t:'out', s:'<span class="d">total 0</span>\n<span class="a">drwx------</span>  web/        <span class="d">[ENCRYPTED]</span>\n<span class="a">drwx------</span>  privesc/    <span class="d">[ENCRYPTED]</span>\n<span class="a">drwx------</span>  crypto/     <span class="d">[ENCRYPTED]</span>\n<span class="a">drwx------</span>  forensics/  <span class="d">[ENCRYPTED]</span>'},
+  {t:'cmd', s:'./decrypt.sh --all'},
+  {t:'out', s:'<span class="r">[!]</span> permission denied: still writing.\n<span class="p">[+]</span> launch status: <span class="a">soon</span>. Check back.'},
+];
+const prompt = '<span class="p">geoffrey@ctf</span><span class="d">:</span><span class="c">~</span><span class="d">$</span> ';
+const cur = '<span class="cursor"></span>';
+let html = '';
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function run(){
+  if(reduce){
+    term.innerHTML = script.map(l => l.t==='cmd' ? prompt+l.s : l.s).join('\n') + '\n' + prompt + cur;
+    return;
+  }
+  for(const l of script){
+    if(l.t==='cmd'){
+      let typed='';
+      for(const ch of l.s){ typed+=ch; term.innerHTML = html+prompt+typed+cur; await sleep(35+Math.random()*55); }
+      html += prompt+l.s+'\n'; term.innerHTML = html+cur; await sleep(350);
+    } else {
+      html += l.s+'\n\n'; term.innerHTML = html+cur; await sleep(650);
+    }
+  }
+  html += prompt; term.innerHTML = html+cur;
+}
+run();
+
+/* ---------- Matrix rain ---------- */
+(function(){
+  const c = document.getElementById('rain'), x = c.getContext('2d');
+  let w,h,cols,drops; const chars='01{}[]<>/\\$#%&;:=+*flagCTF'.split('');
+  function size(){ w=c.width=innerWidth; h=c.height=innerHeight; cols=Math.floor(w/16); drops=Array(cols).fill(0).map(()=>Math.random()*h/16); }
+  size(); addEventListener('resize',size);
+  setInterval(()=>{
+    x.fillStyle='rgba(5,9,10,.12)'; x.fillRect(0,0,w,h);
+    x.fillStyle='#00ff9c'; x.font='14px monospace';
+    for(let i=0;i<cols;i++){
+      x.fillText(chars[Math.random()*chars.length|0], i*16, drops[i]*16);
+      if(drops[i]*16>h && Math.random()>.975) drops[i]=0;
+      drops[i]+=.6;
+    }
+  },60);
+})();
+
+/* ---------- Misc ---------- */
+document.getElementById('yr').textContent = new Date().getFullYear();
+document.getElementById('flag').addEventListener('click', e=>{
+  e.target.textContent='🎉 nice. you poke around like a pentester.';
+});
+console.log('%c> You opened the console. Good instinct. Let\'s talk: geoffreysakora.cv','color:#00ff9c;font:14px monospace');
+</script>
+</body>
+</html>
